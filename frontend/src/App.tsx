@@ -6,6 +6,7 @@ import ManagerPaymentsPage from "./pages/Manager/ManagerPayments";
 import FinanceRedemptionPage from "./pages/Finance/FinanceRedemption";
 import SupervisorApprovalsPage from "./pages/Supervisor/SupervisorApprovals";
 import ProtectedRoute from "./layouts/ProtectedRoute";
+import AppLayout from "./layouts/AppLayout";
 import { ToastContainer } from "react-toastify";
 
 const App: React.FC = () => {
@@ -18,7 +19,7 @@ const App: React.FC = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <AppLayout />
             </ProtectedRoute>
           }
         >
