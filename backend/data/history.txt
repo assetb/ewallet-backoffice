@@ -1,0 +1,2 @@
+# Формат: type;recordId;merchantId;amount;dateTimeISO
+# type = REDEMPTION или EMISSION

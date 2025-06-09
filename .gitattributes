@@ -1,0 +1,17 @@
+# Все текстовые файлы — нормализуем в LF в репозитории
+* text=auto eol=lf
+
+# Явно укажем, что JSON, Markdown, конфиги, код — LF
+*.js      text
+*.ts      text
+*.tsx     text
+*.json    text
+*.css     text
+*.html    text
+*.md      text
+
+# Бинарные файлы — не трогаем
+*.png     binary
+*.jpg     binary
+*.svg     binary
+
