@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname ?? "/dashboard";
+  const from = (location.state as any)?.from?.pathname;
 
   const {
     register,
@@ -38,7 +38,23 @@ const LoginPage: React.FC = () => {
     try {
       const resp = await loginRequest(data.login, data.password);
       login(resp.token, resp.user);
-      navigate(from, { replace: true });
+      let target = from;
+      if (!target) {
+        switch (resp.user.role) {
+          case "manager":
+            target = "/manager/payments";
+            break;
+          case "finance":
+            target = "/finance/redemption";
+            break;
+          case "supervisor":
+            target = "/supervisor/approvals";
+            break;
+          default:
+            target = "/dashboard";
+        }
+      }
+      navigate(target, { replace: true });
       toast.success("Успешный вход");
     } catch (err: any) {
       toast.error(err.response?.data?.message ?? "Ошибка входа");
