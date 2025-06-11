@@ -17,7 +17,7 @@
 * Контролировать баланс;
 * Выполнять другие функциональные операции, которые могут быть добавлены в будущем.
 
-**1.3. Общие ограничения**
+## 1.3. Общие ограничения
 
 * ФП не имеет собственной базы данных. Все постоянные данные (списки мерчантов, запросы, история операций, учётные записи) хранятся или на жестком диске сервера в виде текстовых файлов, или запрашиваются из бэкендов ПШ и ЭК.
 * Для хранения логинов и паролей пользователей на стороне ФП будет использоваться файл `users.txt` (или аналогичный), хранящий минимальный объём информации.
@@ -103,20 +103,22 @@
 5. При нажатии на «Загрузить файл» открывается системное окно выбора файла (dialog `<input type="file">`).
 6. После выбора файл (CSV, XML или другой формат) отправляется POST-запрос на локальный API ПФ:
 
-   ```
+   ```plaintext
    POST /api/manager/upload  
    Content-Type: multipart/form-data
    Body:
      - file: выбранный файл
      - uploaderId: userId (из токена)
    ```
+
 7. Локальный бэк ФП (endpoint `/api/manager/upload`) перенаправляет (прокси) файл в API «Платежного Шлюза» (ПШ), например:
 
-   ```
+   ```http
    POST https://payment-gateway.company/api/payments/batch-upload
    Headers: { Authorization: Bearer <PШ-токен> }
    Body: { file }
    ```
+
 8. ПШ обрабатывает файл, загружает платежи в свою БД и возвращает JSON с результатом (успех/ошибка, количество записей, список ошибок).
 9. Локальный бэк ФП сохраняет в файл `uploaded_files.txt` новую запись (имя файла, дата, uploaderId, статус).
 10. Фронт принимает ответ и отображает сообщение:
@@ -148,12 +150,13 @@
 
   * Формат: каждый файл — отдельная строка:
 
-    ```
+    ```plaintext
     <имя_файла>;<дата_в_формате_ISO>;<uploaderId>;<status>;<загруженных_записей>;<количество_ошибок>
     ```
+
   * Пример:
 
-    ```
+    ```plaintext
     payments_2025-06-01.csv;2025-06-01T10:23:45;user123;SUCCESS;2500;0
     payments_2025-05-28.csv;2025-05-28T14:11:12;user456;ERROR;1800;5
     ```
@@ -186,9 +189,10 @@
    * Делает `POST /api/finance/redemption-requests` с телом `{ merchantId, amount, requesterId }`.
    * Локальный бэк сохраняет новую строку в `redemption_requests.txt` со статусом `PENDING`, формируя запись:
 
-     ```
+     ```plaintext
      <requestId>;<merchantId>;<amount>;<requesterId>;<dateTime>;<status>
      ```
+
    * Возвращает ФП статус «успешно» или «ошибка».
    * ФП показывает сообщение: «Запрос на гашение успешно отправлен руководителю» (если OK), иначе «Ошибка при сохранении запроса: …».
    * Обновляет список текущих заявок (новый GET `/api/finance/redemption-requests`).
@@ -201,7 +205,7 @@
 
      * История гашений и эмиссий хранится в одном файле `history.txt`, где каждая строка содержит:
 
-       ```
+       ```plaintext
        <type>;<recordId>;<merchantId>;<amount>;<dateTime>
        ```
 
@@ -240,30 +244,34 @@
 
   * Строки:
 
-    ```
+    ```plaintext
     <merchantId>;<merchantName>
     ```
+
   * Пример:
 
-    ```
+    ```plaintext
     M001;ООО «Торговая Сеть»
     M002;ИП «Петров С.»
     ```
+
 * `redemption_requests.txt`
 
   * Формат:
 
-    ```
+    ```plaintext
     <requestId>;<merchantId>;<amount>;<requesterId>;<dateTime ISO>;<status>
     ```
+
   * Статус: `PENDING` (новые), после подтверждения руководителем статус меняется на `CONFIRMED` или удаляется из списка (если требуются разные правила).
 * `history.txt`
 
   * Формат:
 
-    ```
+    ```plaintext
     <type>;<recordId>;<merchantId>;<amount>;<dateTime ISO>
     ```
+
   * `<type>` = `REDEMPTION` или `EMISSION`.
   * Каждая строка — отдельная запись.
 
@@ -292,11 +300,12 @@
      1. Находит заявку в `redemption_requests.txt` (по `requestId`).
      2. Делает запрос к API ПШ:
 
-        ```
+        ```http
         POST https://payment-gateway.company/api/payments/redeem
         Headers: { Authorization: Bearer <PШ-токен> }
         Body: { merchantId, amount, requestId }
         ```
+
      3. В случае успешного ответа:
 
         * Удаляет строку из `redemption_requests.txt`.
@@ -350,7 +359,7 @@
 
      * `users.txt` — учётные записи пользователей:
 
-       ```
+       ```plaintext
        <userId>;<login>;<hashPassword>;<role>
        ```
 
@@ -443,7 +452,7 @@
 
 ### 5.1. Общее разделение на слои
 
-```
+```plaintext
 ┌───────────────────────────────────────────────────────────┐
 │                       Клиентская часть                   │
 │   (Front-End Web Application)                            │
@@ -532,12 +541,12 @@
 
 ### 5.2. Детализированная структура папок (пример для React + TypeScript)
 
-```
+```plaintext
 /frontend/  
 ├─ public/  
 │   └─ index.html  
 ├─ src/  
-│   ├─ api/                    # Обёртки для запросов к backend ФП (axios/Fetc h)  
+│   ├─ api/                    # Обёртки для запросов к backend ФП (axios/Fetch)  
 │   │    ├─ auth.ts  
 │   │    ├─ manager.ts  
 │   │    ├─ finance.ts  
@@ -728,7 +737,7 @@
 
 4. **Организация кода**
 
-   ```
+   ```plaintext
    /backend/  
    ├─ src/  
    │   ├─ controllers/             # Логика эндпоинтов  
@@ -841,28 +850,30 @@
     * Делает `POST` в ПШ: `https://payment-gateway.company/api/payments/redeem` с `{ merchantId, amount, requestId }`.
     * Если ответ ПШ OK: удаляет строку из `redemption_requests.txt`, добавляет запись в `history.txt`:
 
-      ```
+      ```plaintext
       REDEMPTION;<newRecordId>;<merchantId>;<amount>;<dateTimeISO>
       ```
+
     * Возвращает `{ success: true }` или `{ success: false, message }`.
 
-6. **Работа с файлами**
+6 **Работа с файлами**
 
-   * Использовать асинхронные методы `fs/promises`: `readFile`, `writeFile`, `appendFile`.
-   * При одновременном доступе (несколько пользователей) — важно блокировать файл на запись (можно обрабатывать последовательно, либо использовать временный файл + атомарную замену).
-   * Формат всех файлов: текстовый с разделителем `;`. При чтении — парсить строку на поля `split(';')`.
+* Использовать асинхронные методы `fs/promises`: `readFile`, `writeFile`, `appendFile`.
+* При одновременном доступе (несколько пользователей) — важно блокировать файл на запись (можно обрабатывать последовательно, либо использовать временный файл + атомарную замену).
+* Формат всех файлов: текстовый с разделителем `;`. При чтении — парсить строку на поля `split(';')`.
 
-7. **Конфигурация и секреты**
+7 **Конфигурация и секреты**
 
-   * Файл `.env` (не коммитить в репозиторий) содержит:
+* Файл `.env` (не коммитить в репозиторий) содержит:
 
-     ```
+     ```plaintext
      JWT_SECRET=<сложная строка>
      PAYMENT_GATEWAY_BASE_URL=https://payment-gateway.company/api
      WALLET_BASE_URL=https://electronic-wallet.company/api
      PORT=4000
      ```
-   * В `config.ts` считывать и валидировать наличие этих переменных.
+
+* В `config.ts` считывать и валидировать наличие этих переменных.
 
 ---
 
@@ -875,7 +886,7 @@
 
 1. **Batch Upload Payments**
 
-   ```
+   ```http
    POST /payments/batch-upload
    Headers:
      Content-Type: multipart/form-data
@@ -894,7 +905,7 @@
 
 2. **Получить список мерчантов**
 
-   ```
+   ```http
    GET /merchants
    Headers: { Authorization: Bearer <PШ_TOKEN> }
    Response:
@@ -906,7 +917,7 @@
 
 3. **Получить баланс**
 
-   ```
+   ```http
    GET /balance?userId=<userId>
    Headers: { Authorization: Bearer <PШ_TOKEN> }
    Response:
@@ -915,7 +926,7 @@
 
 4. **Провести гашение**
 
-   ```
+   ```http
    POST /payments/redeem
    Headers: { Authorization: Bearer <PШ_TOKEN> }
    Body: {
@@ -936,7 +947,7 @@
 
 1. **Получить данные о платежах**
 
-   ```
+   ```http
    GET /wallet/payments?userId=<userId>
    Headers: { Authorization: Bearer <ЭК_TOKEN> }
    Response:
@@ -1080,7 +1091,7 @@
 
 ### 8.3. Пример структуры папок на сервере
 
-```
+```plaintext
 /backend/  
 ├─ src/  
 │   ├─ controllers/  

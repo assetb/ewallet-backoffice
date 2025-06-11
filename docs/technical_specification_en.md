@@ -80,7 +80,7 @@ The system must also support future role additions and expanded functionality.
 
 ### 3.2. Manager Module (Role = manager)
 
-**Batch Upload Payments**
+#### Batch Upload Payments
 
 1. **Screen**: `/manager/payments`
 2. **GET** `/api/manager/uploaded-files` → read and parse `uploaded_files.txt`.
@@ -99,7 +99,7 @@ The system must also support future role additions and expanded functionality.
 
 ### 3.3. Finance Module (Role = finance)
 
-**EM Redemption Requests**
+#### EM Redemption Requests
 
 1. **Screen**: `/finance/redemption`
 2. On load, FE App calls:
@@ -123,7 +123,7 @@ The system must also support future role additions and expanded functionality.
 
 ### 3.4. Supervisor Module (Role = supervisor)
 
-**Confirm Redemptions**
+#### Confirm Redemptions
 
 1. **Screen**: `/supervisor/approvals`
 2. On load, calls:
@@ -165,7 +165,7 @@ The system must also support future role additions and expanded functionality.
 
 ### Front‑end (React + TypeScript + Vite)
 
-```
+```plaintext
 /frontend/
   public/index.html
   src/
@@ -213,7 +213,7 @@ The system must also support future role additions and expanded functionality.
 
 ### Back‑end (Node.js + Express + TypeScript)
 
-```
+```plaintext
 /backend/
   src/
     controllers/

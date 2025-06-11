@@ -15,6 +15,12 @@ interface LoginFormValues {
   password: string;
 }
 
+interface LocationState {
+  from?: {
+    pathname: string;
+  };
+}
+
 const schema = yup.object().shape({
   login: yup.string().required("Логин обязателен"),
   password: yup.string().required("Пароль обязателен")
@@ -24,7 +30,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname;
+  const from = location.state?.from?.pathname;
 
   const {
     register,
