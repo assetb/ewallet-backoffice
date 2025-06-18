@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import multer from "multer";
 import { FileService } from "../services/fileService";
-import { PaymentGatewayService } from "../services/paymentGatewayService";
+import { EwalletService } from "../services/ewalletService";
 import { UploadedFileRecord } from "../models/fileModels";
 import { getCurrentISODate } from "../utils/utils";
 import config from "../config";
@@ -18,43 +18,71 @@ export const uploadFileMiddleware = upload.single("file");
 export async function uploadFileHandler(req: Request, res: Response) {
   const file = (req as any).file as Express.Multer.File;
   const user = (req as any).user;
+  
   if (!file || !user) {
     return res.status(400).json({ message: "Файл или пользователь отсутствует" });
   }
 
-  // Проверяем конфигурацию перед отправкой
-  if (!config.paymentGateway.token) {
-    console.error("ERROR: PAYMENT_GATEWAY_TOKEN не настроен");
+  // Проверяем конфигурацию ewallet перед отправкой
+  if (!config.ewallet.token) {
+    console.error("ERROR: EWALLET_TOKEN не настроен");
     return res.status(500).json({ 
       success: false, 
-      message: "Ошибка конфигурации: токен Payment Gateway не настроен" 
+      message: "Ошибка конфигурации: токен Ewallet не настроен" 
     });
   }
 
-  if (!config.paymentGateway.baseUrl) {
-    console.error("ERROR: PAYMENT_GATEWAY_BASE_URL не настроен");
+  if (!config.ewallet.baseUrl) {
+    console.error("ERROR: EWALLET_BASE_URL не настроен");
     return res.status(500).json({ 
       success: false, 
-      message: "Ошибка конфигурации: URL Payment Gateway не настроен" 
+      message: "Ошибка конфигурации: URL Ewallet не настроен" 
     });
   }
 
   try {
-    console.log(`Начинаем загрузку файла: ${file.originalname} (${file.size} байт)`);
+    console.log(`🚀 [MANAGER] Начинаем обработку файла: ${file.originalname} (${file.size} байт) от пользователя ${user.userId}`);
     
-    // Прокси в Payment Gateway
-    const pgResp = await PaymentGatewayService.uploadBatch(
+    // Выполняем полную последовательность обработки через Ewallet API
+    const ewalletResponse = await EwalletService.processFileComplete(
       file.buffer,
       file.originalname
     );
     
-    console.log("Ответ от Payment Gateway:", pgResp);
+    console.log(`✅ [MANAGER] Обработка через Ewallet завершена:`, {
+      fileName: file.originalname,
+      state: ewalletResponse.data.state,
+      progress: ewalletResponse.data.progress,
+      logsCount: ewalletResponse.data.result.logs?.length || 0
+    });
     
-    // Предполагаем, что возвращается { success: boolean, uploadedCount: number, errors: [] }
-    const statusRecord = pgResp.success ? "SUCCESS" : "ERROR";
-    const uploadedCount = pgResp.uploadedCount ?? 0;
-    const errorCount = Array.isArray(pgResp.errors) ? pgResp.errors.length : 0;
+    // Определяем статус для записи в базу данных
+    let statusRecord: string;
+    let uploadedCount = 0;
+    let errorCount = 0;
+    
+    if (ewalletResponse.data.state === 'completed') {
+      statusRecord = "SUCCESS";
+      // Подсчитываем успешные транзакции из логов
+      const successLogs = ewalletResponse.data.result.logs?.filter(log => 
+        log.includes('✅') && log.includes('успешно обработана')
+      ) || [];
+      uploadedCount = successLogs.length;
+      
+      // Подсчитываем ошибки из логов
+      const errorLogs = ewalletResponse.data.result.logs?.filter(log => 
+        log.includes('❌') || log.includes('ошибка')
+      ) || [];
+      errorCount = errorLogs.length;
+      
+    } else if (ewalletResponse.data.state === 'failed') {
+      statusRecord = "ERROR";
+      errorCount = 1;
+    } else {
+      statusRecord = "PROCESSING";
+    }
 
+    // Записываем результат в базу данных
     const record: UploadedFileRecord = {
       fileName: file.originalname,
       date: getCurrentISODate(),
@@ -63,12 +91,33 @@ export async function uploadFileHandler(req: Request, res: Response) {
       uploadedCount,
       errorCount
     };
+    
     await FileService.appendUploadedFile(record);
-    return res.json({ success: true, detail: pgResp });
-  } catch (err: any) {
-    // Если что-то пошло не так
-    console.error("Ошибка при загрузке файла:", {
+    
+    console.log(`💾 [MANAGER] Результат сохранен в базу данных:`, {
       fileName: file.originalname,
+      status: statusRecord,
+      uploadedCount,
+      errorCount
+    });
+    
+    // Возвращаем результат фронтенду
+    return res.json({ 
+      success: true, 
+      detail: {
+        state: ewalletResponse.data.state,
+        progress: ewalletResponse.data.progress,
+        logs: ewalletResponse.data.result.logs,
+        completedAt: ewalletResponse.data.result.completedAt,
+        uploadedCount,
+        errorCount
+      }
+    });
+    
+  } catch (err: any) {
+    console.error(`💥 [MANAGER] Ошибка при обработке файла:`, {
+      fileName: file.originalname,
+      userId: user.userId,
       error: err.message,
       stack: err.stack,
       code: err.code
@@ -83,20 +132,50 @@ export async function uploadFileHandler(req: Request, res: Response) {
       uploadedCount: 0,
       errorCount: 1
     };
+    
     await FileService.appendUploadedFile(record);
     
-    // Возвращаем более информативное сообщение об ошибке
-    let errorMessage = "Ошибка загрузки в ПШ";
+    // Формируем информативное сообщение об ошибке
+    let errorMessage = "Ошибка обработки в Ewallet";
+    
     if (err.code === 'ERR_INVALID_CHAR') {
       errorMessage = "Ошибка конфигурации: недопустимые символы в токене авторизации";
     } else if (err.code === 'ENOTFOUND') {
-      errorMessage = "Ошибка подключения к Payment Gateway: сервер недоступен";
+      errorMessage = "Ошибка подключения к Ewallet: сервер недоступен";
     } else if (err.code === 'ECONNREFUSED') {
-      errorMessage = "Ошибка подключения к Payment Gateway: соединение отклонено";
+      errorMessage = "Ошибка подключения к Ewallet: соединение отклонено";
+    } else if (err.code === 'ETIMEDOUT') {
+      errorMessage = "Ошибка подключения к Ewallet: превышено время ожидания";
     } else if (err.response?.status) {
-      errorMessage = `Ошибка Payment Gateway: ${err.response.status} - ${err.response.statusText}`;
+      const status = err.response.status;
+      if (status === 400) {
+        errorMessage = "Ошибка Ewallet: неверный формат файла или данных";
+      } else if (status === 401) {
+        errorMessage = "Ошибка Ewallet: неверный токен авторизации";
+      } else if (status === 404) {
+        errorMessage = "Ошибка Ewallet: ресурс не найден";
+      } else if (status === 500) {
+        errorMessage = "Ошибка Ewallet: внутренняя ошибка сервера";
+      } else {
+        errorMessage = `Ошибка Ewallet: ${status} - ${err.response.statusText}`;
+      }
+    } else if (err.message) {
+      errorMessage = `Ошибка Ewallet: ${err.message}`;
     }
     
-    return res.status(500).json({ success: false, message: errorMessage });
+    console.error(`📝 [MANAGER] Возвращаем ошибку пользователю:`, {
+      fileName: file.originalname,
+      errorMessage
+    });
+    
+    return res.status(500).json({ 
+      success: false, 
+      message: errorMessage,
+      detail: {
+        error: err.message,
+        code: err.code,
+        status: err.response?.status
+      }
+    });
   }
 }

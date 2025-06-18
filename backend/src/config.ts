@@ -10,7 +10,9 @@ const requiredEnv = [
   "PAYMENT_GATEWAY_BASE_URL",
   "WALLET_BASE_URL",
   "PAYMENT_GATEWAY_TOKEN",
-  "WALLET_TOKEN"
+  "WALLET_TOKEN",
+  "EWALLET_BASE_URL",
+  "EWALLET_TOKEN"
 ];
 
 for (const varName of requiredEnv) {
@@ -24,6 +26,8 @@ for (const varName of requiredEnv) {
     console.error("WALLET_BASE_URL=https://ewallet.nomadpay.kz/api");
     console.error("PAYMENT_GATEWAY_TOKEN=ваш_токен_ПШ");
     console.error("WALLET_TOKEN=ваш_токен_ЭК");
+    console.error("EWALLET_BASE_URL=http://your-server/command");
+    console.error("EWALLET_TOKEN=ваш_токен_ewallet");
     process.exit(1);
   }
 }
@@ -38,6 +42,10 @@ export default {
   wallet: {
     baseUrl: process.env.WALLET_BASE_URL as string,
     token: (process.env.WALLET_TOKEN as string).trim()
+  },
+  ewallet: {
+    baseUrl: process.env.EWALLET_BASE_URL as string,
+    token: (process.env.EWALLET_TOKEN as string).trim()
   },
   dataDir: path.resolve(__dirname, "../data")
 };
