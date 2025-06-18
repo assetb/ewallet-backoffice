@@ -2,10 +2,23 @@ import axios from "axios";
 import FormData from "form-data";
 import config from "../config";
 
+// Проверяем токен при инициализации
+if (!config.paymentGateway.token) {
+  console.error("ERROR: PAYMENT_GATEWAY_TOKEN не установлен в переменных окружения");
+  process.exit(1);
+}
+
+// Проверяем, что токен не содержит недопустимых символов
+const token = config.paymentGateway.token.trim();
+if (token.includes('\n') || token.includes('\r') || token.includes('\t')) {
+  console.error("ERROR: PAYMENT_GATEWAY_TOKEN содержит недопустимые символы (переносы строк, табуляции)");
+  process.exit(1);
+}
+
 const pgClient = axios.create({
   baseURL: config.paymentGateway.baseUrl,
   headers: {
-    Authorization: `Bearer ${config.paymentGateway.token}`
+    Authorization: `Bearer ${token}`
   },
   timeout: 10000
 });
@@ -16,8 +29,15 @@ export class PaymentGatewayService {
     form.append("file", fileBuffer, { filename: originalName });
     const headers = {
       ...form.getHeaders(),
-      Authorization: `Bearer ${config.paymentGateway.token}`
+      Authorization: `Bearer ${token}`
     };
+    
+    console.log("Отправляем запрос к Payment Gateway:", {
+      url: `${config.paymentGateway.baseUrl}/payments/batch-upload`,
+      tokenLength: token.length,
+      tokenPreview: token.substring(0, 10) + "..."
+    });
+    
     const resp = await axios.post(
       `${config.paymentGateway.baseUrl}/payments/batch-upload`,
       form,

@@ -16,6 +16,14 @@ const requiredEnv = [
 for (const varName of requiredEnv) {
   if (!process.env[varName]) {
     console.error(`ERROR: Не найдена переменная окружения ${varName}`);
+    console.error("Убедитесь, что файл .env существует в папке backend/ и содержит все необходимые переменные");
+    console.error("Пример содержимого .env файла:");
+    console.error("PORT=4000");
+    console.error("JWT_SECRET=ваш_сложный_jwt_секрет");
+    console.error("PAYMENT_GATEWAY_BASE_URL=https://api.nomadpay.kz/api");
+    console.error("WALLET_BASE_URL=https://ewallet.nomadpay.kz/api");
+    console.error("PAYMENT_GATEWAY_TOKEN=ваш_токен_ПШ");
+    console.error("WALLET_TOKEN=ваш_токен_ЭК");
     process.exit(1);
   }
 }
@@ -25,11 +33,11 @@ export default {
   jwtSecret: process.env.JWT_SECRET as string,
   paymentGateway: {
     baseUrl: process.env.PAYMENT_GATEWAY_BASE_URL as string,
-    token: process.env.PAYMENT_GATEWAY_TOKEN as string
+    token: (process.env.PAYMENT_GATEWAY_TOKEN as string).trim()
   },
   wallet: {
     baseUrl: process.env.WALLET_BASE_URL as string,
-    token: process.env.WALLET_TOKEN as string
+    token: (process.env.WALLET_TOKEN as string).trim()
   },
   dataDir: path.resolve(__dirname, "../data")
 };
