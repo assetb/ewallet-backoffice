@@ -17,9 +17,9 @@ npm install
 PORT=4000
 JWT_SECRET=ваш_сложный_jwt_секрет_здесь
 PAYMENT_GATEWAY_BASE_URL=https://api.nomadpay.kz/api
-WALLET_BASE_URL=https://ewallet.nomadpay.kz/api
 PAYMENT_GATEWAY_TOKEN=ваш_токен_платежного_шлюза
-WALLET_TOKEN=ваш_токен_электронного_кошелька
+EWALLET_BASE_URL=https://ewallet.nomadpay.kz/api
+EWALLET_TOKEN=ваш_токен_электронного_кошелька
 ```
 
 ### 2. Настройка Frontend

@@ -6,9 +6,9 @@ import bcrypt from 'bcrypt';
 process.env.PORT = '3000';
 process.env.JWT_SECRET = 'secret';
 process.env.PAYMENT_GATEWAY_BASE_URL = 'http://pg';
-process.env.WALLET_BASE_URL = 'http://wallet';
-process.env.PAYMENT_GATEWAY_TOKEN = 'tokpg';
-process.env.WALLET_TOKEN = 'tokw';
+process.env.EWALLET_BASE_URL = 'http://wallet';
+process.env.PAYMENT_GATEWAY_TOKEN = 'token_pg';
+process.env.EWALLET_TOKEN = 'token_ew';
 
 import { loginHandler } from '../src/controllers/authController';
 import { FileService } from '../src/services/fileService';
