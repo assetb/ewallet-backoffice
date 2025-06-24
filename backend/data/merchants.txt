@@ -1,2 +1,0 @@
-# Формат: merchantId;merchantName
-StablexSolution;ООО «Stablex Solution»

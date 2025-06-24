@@ -1,6 +1,0 @@
-# Формат: userId;login;hashedPassword;role
-# Пароль хранится в виде bcrypt-хеша.
-# Пример (один мастер-пользователь "admin" с паролем "password123"):
-1;admin;$2b$10$rSNVJQWGn00c8ZOywANPmO9VhBf.gDvYxCdgRiTEF0pHgyn4BXv7y;manager
-2;finance;$2b$10$TZ8kMVG6Jd0N9eL5z/TkBuWG/RxedE94N9ZoEoSA9ZSQj/54osG0i;finance
-3;supervisor;$2b$10$7IHV4DQlLBVJ4acaZRr7VeJ5LtKQK3ZmTdz6q/8SMsKmeJ8wTJ.3y;supervisor

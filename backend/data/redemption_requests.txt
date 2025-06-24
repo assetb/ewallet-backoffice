@@ -1,2 +1,0 @@
-# Формат: requestId;merchantId;amount;requesterId;dateTimeISO;status
-# Например:
