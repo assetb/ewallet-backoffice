@@ -53,7 +53,7 @@ export async function uploadFileHandler(req: Request, res: Response) {
       fileName: file.originalname,
       state: ewalletResponse.data.state,
       progress: ewalletResponse.data.progress,
-      logsCount: ewalletResponse.data.result.logs?.length || 0
+      logsCount: ewalletResponse.data.result?.logs?.length || 0
     });
     
     // Определяем статус для записи в базу данных
@@ -64,13 +64,13 @@ export async function uploadFileHandler(req: Request, res: Response) {
     if (ewalletResponse.data.state === 'completed') {
       statusRecord = "SUCCESS";
       // Подсчитываем успешные транзакции из логов
-      const successLogs = ewalletResponse.data.result.logs?.filter(log => 
+      const successLogs = ewalletResponse.data.result?.logs?.filter(log => 
         log.includes('✅') && log.includes('успешно обработана')
       ) || [];
       uploadedCount = successLogs.length;
       
       // Подсчитываем ошибки из логов
-      const errorLogs = ewalletResponse.data.result.logs?.filter(log => 
+      const errorLogs = ewalletResponse.data.result?.logs?.filter(log => 
         log.includes('❌') || log.includes('ошибка')
       ) || [];
       errorCount = errorLogs.length;
@@ -107,8 +107,8 @@ export async function uploadFileHandler(req: Request, res: Response) {
       detail: {
         state: ewalletResponse.data.state,
         progress: ewalletResponse.data.progress,
-        logs: ewalletResponse.data.result.logs,
-        completedAt: ewalletResponse.data.result.completedAt,
+        logs: ewalletResponse.data.result?.logs,
+        completedAt: ewalletResponse.data.result?.completedAt,
         uploadedCount,
         errorCount
       }
