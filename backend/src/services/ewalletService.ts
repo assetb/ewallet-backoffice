@@ -172,14 +172,14 @@ export class EwalletService {
     });
     
     try {
-      // Используем POST вместо GET, так как GET с телом запроса может не поддерживаться
-      const response = await axios.post(
+      // Используем GET запрос с токеном в теле запроса
+      const response = await axios.get(
         `${config.ewallet.baseUrl}/command/transactions/third/status/${jobId}`,
-        requestBody,
         {
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          data: requestBody
         }
       );
       
